@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,10 +9,9 @@ public class Observer : MonoBehaviour
 
     void OnTriggerEnter (Collider other)
     {
-        if (other.gameObject.CompareTag("Player") )
+        if (other.transform == player)
         {
             m_IsPlayerInRange = true;
-            Debug.Log("Player was caught");
         }
     }
 
@@ -34,7 +33,7 @@ public class Observer : MonoBehaviour
 
             if(Physics.Raycast(ray, out raycastHit))
             {
-                if (raycastHit.collider == player)
+                if (raycastHit.collider.transform == player)
                 {
                     Debug.Log("Player was caught!");
                 }
