@@ -8,7 +8,7 @@ public class PlayerMovement : MonoBehaviour
     Animator m_Animator;
     public InputAction MoveAction;
 
-    public float walkSpeed = 1.0f;
+    public float walkSpeed = 2.0f;
     public float turnSpeed = 20f;
 
     Rigidbody m_Rigidbody;
@@ -22,8 +22,19 @@ public class PlayerMovement : MonoBehaviour
         m_Animator = GetComponent<Animator>();
     }
 
+
     void FixedUpdate ()
     {
+        if (Input.GetKey(KeyCode.Space))
+        {
+
+            walkSpeed = 4.0f;
+        }
+        else
+        {
+            walkSpeed = 2.5f;
+        }
+
         var pos = MoveAction.ReadValue<Vector2>();
         
         float horizontal = pos.x;
