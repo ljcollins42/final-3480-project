@@ -1,125 +1,46 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class FPSMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
-    public GameObject Enemy;
+    Animator m_Animator;
+    public InputAction MoveAction;
 
-    public float moveSpeed;
+    public float walkSpeed = 1.0f;
+    public float turnSpeed = 20f;
 
-    public float groundDrag;
+    Rigidbody m_Rigidbody;
+    Vector3 m_Movement;
+    Quaternion m_Rotation = Quaternion.identity;
 
-    public float jumpForce;
-    public float jumpCooldown;
-    public float airMultiplier;
-    bool readytoJump;
-    public KeyCode jumpKey = KeyCode.Space;
-
-    public float playerHeight;
-    public LayerMask whatisGround;
-    bool isGrounded;
-
-    public Transform orientation;
-
-    float horizontalInput;
-    float verticalInput;
-
-    Vector3 moveDirection;
-
-    Rigidbody rb;
-
-    private void Start()
+    void Start ()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-        readytoJump = true;
-
+        m_Rigidbody = GetComponent<Rigidbody> ();
+        MoveAction.Enable();
+        m_Animator = GetComponent<Animator>();
     }
 
-    void Update()
+    void FixedUpdate ()
     {
-        isGrounded = Physics.Raycast(transform.position,Vector3.down,playerHeight * 0.5f + 0.2f, whatisGround);
-        MyInput();
-        Speedcontrol();
-
-        if(isGrounded)
-        {
-            rb.linearDamping = groundDrag;
-        }
-
-        else
-        {
-            rb.linearDamping = 0;
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        MovePlayer();
-    }
-
-    private void MyInput()
-    {
-        horizontalInput =  Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
-
-        if(Input.GetKey(jumpKey) && readytoJump && isGrounded)
-        {
-            readytoJump = false;
-
-            Jump();
-            
-            Invoke(nameof(resetJump),jumpCooldown);
-        }
-    }
-
-    private void MovePlayer()
-    {
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
-        if(isGrounded)
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed *10f, ForceMode.Force);
-    
-        }
+        var pos = MoveAction.ReadValue<Vector2>();
         
-        else if(!isGrounded)
-        {
-             rb.AddForce(moveDirection.normalized * moveSpeed *10f * airMultiplier, ForceMode.Force);
-    
-        }
+        float horizontal = pos.x;
+        float vertical = pos.y;
+        
+        m_Movement.Set(horizontal, 0f, vertical);
+        m_Movement.Normalize ();
+
+        bool hasHorizontalInput = !Mathf.Approximately (horizontal, 0f);
+        bool hasVerticalInput = !Mathf.Approximately (vertical, 0f);
+        bool isWalking = hasHorizontalInput || hasVerticalInput;
+        m_Animator.SetBool ("IsWalking", isWalking);
+
+        Vector3 desiredForward = Vector3.RotateTowards (transform.forward, m_Movement, turnSpeed * Time.deltaTime, 0f);
+        m_Rotation = Quaternion.LookRotation (desiredForward);
+        
+        m_Rigidbody.MoveRotation (m_Rotation);
+        m_Rigidbody.MovePosition (m_Rigidbody.position + m_Movement * walkSpeed * Time.deltaTime);
     }
-
-
-    private void Speedcontrol()
-    {
-        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
-        if(flatVel.magnitude > moveSpeed)
-        {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitedVel.x,rb.linearVelocity.y,limitedVel.z);
-        }
-    }
-
-    private void Jump()
-    {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-    }
-
-    private void resetJump()
-    {
-        readytoJump = true;
-    }
-
-     private void OnTriggerEnter(Collider other)
-     {
-        if(other.gameObject.CompareTag("trigger"))
-        {
-            Instantiate(Enemy);
-        }
-     }
-
-
 }

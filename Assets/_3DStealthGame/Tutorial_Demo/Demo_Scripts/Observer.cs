@@ -6,6 +6,7 @@ public class Observer : MonoBehaviour
 {
     public Transform player;
     bool m_IsPlayerInRange;
+    
 
     void OnTriggerEnter (Collider other)
     {
